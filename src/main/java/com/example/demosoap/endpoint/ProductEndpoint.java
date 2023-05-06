@@ -1,17 +1,16 @@
 package com.example.demosoap.endpoint;
 
+import com.example.demosoap.converter.ProductConverter;
+import com.example.demosoap.gen.*;
+import com.example.demosoap.model.ProductModel;
 import com.example.demosoap.repository.ProductRepository;
-import com.example.demosoap.gen.GetProductRequest;
-import com.example.demosoap.gen.GetProductResponse;
-import com.example.demosoap.gen.GetProductsRequest;
-import com.example.demosoap.gen.GetProductsResponse;
-import com.example.demosoap.gen.PostProductRequest;
-import com.example.demosoap.gen.PostProductResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ws.server.endpoint.annotation.Endpoint;
 import org.springframework.ws.server.endpoint.annotation.PayloadRoot;
 import org.springframework.ws.server.endpoint.annotation.RequestPayload;
 import org.springframework.ws.server.endpoint.annotation.ResponsePayload;
+
+import java.util.List;
 
 @Endpoint
 public class ProductEndpoint {
@@ -20,6 +19,9 @@ public class ProductEndpoint {
 
     @Autowired
     private ProductRepository productRepository;
+
+    @Autowired
+    private ProductConverter productConverter;
 
     @PayloadRoot(namespace = NAMESPACE_URI, localPart = "getProductRequest")
     @ResponsePayload
@@ -33,16 +35,19 @@ public class ProductEndpoint {
     @ResponsePayload
     public GetProductsResponse getProducts(@RequestPayload GetProductsRequest request) {
         GetProductsResponse response = new GetProductsResponse();
-        response.setProducts(productRepository.findAll());
+        List<ProductModel> productModels = productRepository.findAll();
+        List<Product> products = productConverter.convertProductModelsToProducts(productModels);
+        response.getProducts().addAll(products);
         return response;
     }
     
     @PayloadRoot(namespace = NAMESPACE_URI, localPart = "postProductRequest")
     @ResponsePayload
-    public PostProductResponse getProducts(@RequestPayload PostProductRequest request) {
+    public PostProductResponse postProducts(@RequestPayload PostProductRequest request) {
         PostProductResponse response = new PostProductResponse();
-        response.setProduct(productRepository.save(request.getProduct()));
+        ProductModel productModel = productConverter.convertProductToProductModel(request.getProduct());
+        Product product = productConverter.convertProductModelToProduct(productRepository.save(productModel));
+        response.setProduct(product);
         return response;
     }
 }
-
