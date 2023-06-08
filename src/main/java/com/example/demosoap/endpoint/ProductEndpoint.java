@@ -27,7 +27,8 @@ public class ProductEndpoint {
     @ResponsePayload
     public GetProductResponse getProduct(@RequestPayload GetProductRequest request) {
         GetProductResponse response = new GetProductResponse();
-        response.setProduct(productRepository.findByName(request.getName()));
+        ProductModel productModel = productRepository.findByName(request.getName());
+        response.setProduct(productConverter.convertProductModelToProduct(productModel));
         return response;
     }
     
